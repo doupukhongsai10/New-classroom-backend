@@ -8,11 +8,13 @@ const router = express.Router();
 router.get("/", async (req,res) =>{
     try {
         const { search, department, page = '1', limit = '10' } = req.query;
+        console.log(req.query);
+        
         const pageValue = Array.isArray(page) ? page[0] : page;
         const limitValue = Array.isArray(limit) ? limit[0] : limit;
 
         const currentPage = Number(pageValue);      
-        const limitPerPage = Math.min(100, Math.max(1, +limit));
+        const limitPerPage = Math.min(100, Math.max(1, Number(limitValue)));
 
         if (!Number.isInteger(currentPage) || currentPage < 1 || !Number.isInteger(limitPerPage) || limitPerPage < 1) {
             return res.status(400).json({ error: 'page and limit must be positive integers' });
@@ -30,7 +32,8 @@ router.get("/", async (req,res) =>{
             );
         }
         if(department){
-            filterConditions.push(ilike(departments.name, `%${department}%`));
+            const deptPattern = `%${String(department).replace(/[%_]/g, '\\$@')}%`;
+            filterConditions.push(ilike(departments.name, deptPattern));
         }
         const whereClause = filterConditions.length > 0? and(...filterConditions): undefined;
 
