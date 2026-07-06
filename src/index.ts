@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 import subjectsRouter from "./routes/subject";
 import classesRouter from "./routes/class";
+import securityMiddleware from "./middleware/security";
 
 dotenv.config();
 
@@ -18,13 +19,15 @@ console.log("FRONTEND_URL =", process.env.FRONTEND_URL);
 
 // CORS FIRST
 app.use(cors({
-    origin: "http://localhost:5174",
+    origin: process.env.FRONTEND_URL,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
 }));
 
 // Then body parser
 app.use(express.json());
+
+app.use(securityMiddleware);
 
 // Then routes
 app.use("/api/subjects", subjectsRouter);
