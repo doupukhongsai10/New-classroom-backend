@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 import subjectsRouter from "./routes/subject.js";
 import classesRouter from "./routes/class.js";
+import usersRouter from "./routes/users.js";
 import securityMiddleware from "./middleware/security.js";
 
 dotenv.config();
@@ -42,6 +43,7 @@ app.use(securityMiddleware);
 // Then routes
 app.use("/api/subjects", subjectsRouter);
 app.use("/api/classes", classesRouter);
+app.use("/api/users", usersRouter);
 
 app.get("/", (req, res) => {
     res.send("Hello!, Welcome to classroom API");
