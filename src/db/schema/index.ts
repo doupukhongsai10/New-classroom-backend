@@ -1,3 +1,3 @@
-export * from "./app";
+export * from "./app.js";
 
-export * from './auth'
+export * from './auth.js'
