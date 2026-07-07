@@ -9,7 +9,7 @@ import securityMiddleware from "./middleware/security.js";
 dotenv.config();
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT ?? 8000;
 
 if (!process.env.FRONTEND_URL) {
     throw new Error("FRONTEND_URL is not set in .env file");
@@ -17,9 +17,19 @@ if (!process.env.FRONTEND_URL) {
 
 console.log("FRONTEND_URL =", process.env.FRONTEND_URL);
 
-// CORS FIRST
+// CORS FIRST — supports comma-separated list of allowed origins
+const allowedOrigins = (process.env.FRONTEND_URL ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. curl, Postman, server-to-server)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
 }));
