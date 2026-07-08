@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import subjectsRouter from "./routes/subject.js";
-import classesRouter from "./routes/class.js";
+import classesRouter from "./routes/classes.js";
 import usersRouter from "./routes/users.js";
-import securityMiddleware from "./middleware/security.js";
+// import securityMiddleware from "./middleware/security.js";
 
 dotenv.config();
 
@@ -28,6 +28,8 @@ app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (e.g. curl, Postman, server-to-server)
         if (!origin) return callback(null, true);
+        // In local development, allow any localhost port to avoid Vite port churn issues.
+        if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
         callback(new Error(`CORS: origin '${origin}' not allowed`));
     },
@@ -38,7 +40,7 @@ app.use(cors({
 // Then body parser
 app.use(express.json());
 
-app.use(securityMiddleware);
+// app.use(securityMiddleware);
 
 // Then routes
 app.use("/api/subjects", subjectsRouter);

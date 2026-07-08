@@ -1,9 +1,44 @@
-import { and, count, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, eq, ilike, or, sql } from 'drizzle-orm';
 import express from 'express';
 import { user } from '../db/schema/auth.js';
 import { db } from '../db/index.js';
 
 const router = express.Router();
+
+router.post("/", async (req, res) => {
+    try {
+        const { id, name, email, role = "student" } = req.body ?? {};
+
+        if (!id || !email) {
+            return res.status(400).json({ error: "id and email are required" });
+        }
+
+        const validRoles = ['student', 'teacher', 'admin'] as const;
+        const roleValue = String(role) as typeof validRoles[number];
+
+        if (!validRoles.includes(roleValue)) {
+            return res.status(400).json({ error: "invalid role" });
+        }
+
+        const result = await db.execute(sql`
+            insert into "user" ("id", "name", "email", "email_verified", "role")
+            values (${String(id)}, ${name ? String(name) : null}, ${String(email)}, true, ${roleValue})
+            on conflict ("id") do nothing
+            returning "id", "name", "email", "role"
+        `);
+
+        const createdUser = (result as { rows?: Array<{ id: string; name: string | null; email: string; role: string }> }).rows?.[0];
+
+        if (!createdUser) {
+            return res.status(200).json({ data: null, message: "user already exists" });
+        }
+
+        res.status(201).json({ data: createdUser });
+    } catch (e) {
+        console.error('POST /users error:', e);
+        res.status(500).json({ error: 'Failed to create user' });
+    }
+});
 
 router.get("/", async (req, res) => {
     try {
@@ -50,10 +85,15 @@ router.get("/", async (req, res) => {
         const totalCount = countResult[0]?.count ?? 0;
 
         const userList = await db
-            .select({ ...getTableColumns(user) })
+            .select({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            })
             .from(user)
             .where(whereClause)
-            .orderBy(desc(user.createdAt))
+            .orderBy(asc(user.name))
             .limit(limitPerPage)
             .offset(offset);
 
@@ -68,7 +108,7 @@ router.get("/", async (req, res) => {
         });
 
     } catch (e) {
-        console.error(`GET /users error: ${e}`);
+        console.error('GET /users error:', e);
         res.status(500).json({ error: 'Failed to get users' });
     }
 });

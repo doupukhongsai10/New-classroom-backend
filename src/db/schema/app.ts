@@ -1,7 +1,6 @@
 import { relations } from "drizzle-orm";
-import { integer } from "drizzle-orm/pg-core";
-import { varchar } from "drizzle-orm/pg-core";
-import { pgTable, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { user } from "./auth.js";
 
 const timestamps = {
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -25,11 +24,40 @@ export const subjects = pgTable('subjects', {
     ...timestamps
 });
 
+export const classStatusEnum = pgEnum('class_status', ['active', 'inactive']);
+
+export const classes = pgTable('classes', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar('name', {length: 255}).notNull(),
+    description: text('description'),
+    subjectId: integer('subject_id').notNull().references(() => subjects.id, { onDelete: 'restrict'}),
+    teacherId: text('teacher_id').notNull().references(() => user.id, { onDelete: 'cascade'}),
+    capacity: integer('capacity').notNull(),
+    status: classStatusEnum('status').notNull().default('active'),
+    bannerUrl: text('banner_url'),
+    bannerCldPubId: text('banner_cld_pub_id'),
+    inviteCode: text('invite_code').unique(),
+    ...timestamps
+});
+
 export const departmentRelations = relations(departments, ({ many }) => ({ subjects: many(subjects)}));
+
 export const subjectsRelations = relations(subjects, ({ one, many }) => ({ 
     department: one(departments, {
         fields: [subjects.departmentId],
         references: [departments.id],
+    }),
+    classes: many(classes)
+}));
+
+export const classesRelations = relations(classes, ({ one }) => ({
+    subject: one(subjects, {
+        fields: [classes.subjectId],
+        references: [subjects.id]
+    }),
+    teacher: one(user, {
+        fields: [classes.teacherId],
+        references: [user.id]
     })
 }));
 
@@ -38,3 +66,6 @@ export type NewDepartment = typeof departments.$inferInsert;
 
 export type Subject = typeof subjects.$inferSelect;
 export type NewSubject = typeof subjects.$inferInsert;
+
+export type Class = typeof classes.$inferSelect;
+export type NewClass = typeof classes.$inferInsert;
