@@ -49,7 +49,7 @@ app.use("/api/classes", classesRouter);
 app.use("/api/users", usersRouter);
 
 app.get("/", (req, res) => {
-    res.send("Hello!, Welcome to classroom API");
+    res.send("Hello!, Welcome to classroom API - v2");
 });
 
 app.listen(Number(PORT), "0.0.0.0", () => {
