@@ -20,14 +20,22 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ error: "invalid role" });
         }
 
-        const result = await db.execute(sql`
-            insert into "user" ("id", "name", "email", "email_verified", "role")
-            values (${String(id)}, ${name ? String(name) : null}, ${String(email)}, true, ${roleValue})
-            on conflict ("id") do nothing
-            returning "id", "name", "email", "role"
-        `);
-
-        const createdUser = (result as { rows?: Array<{ id: string; name: string | null; email: string; role: string }> }).rows?.[0];
+        const [createdUser] = await db
+            .insert(user)
+            .values({
+                id: String(id),
+                name: name ? String(name) : null,
+                email: String(email),
+                emailVerified: new Date(),
+                role: roleValue,
+            })
+            .onConflictDoNothing({ target: user.id })
+            .returning({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            });
 
         if (!createdUser) {
             return res.status(200).json({ data: null, message: "user already exists" });
