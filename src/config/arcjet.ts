@@ -10,10 +10,10 @@ if (!process.env.ARCJET_KEY && process.env.NODE_ENV !== "test") {
 const aj = arcjet({
     key: process.env.ARCJET_KEY!,
     rules: [
-        shield({ mode: "LIVE" }),
+        shield({ mode: "DRY_RUN" }),
         // Create a bot detection rule
         detectBot({
-            mode: "LIVE", // Blocks requests. Use "DRY_RUN" to log only
+            mode: "DRY_RUN", // Logs only, doesn't block requests
             // Block all bots except the following
             allow: [
                 // See the full list at https://arcjet.com/bot-list
