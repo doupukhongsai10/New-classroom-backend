@@ -118,4 +118,10 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/:id', async (req, res) => {
+    const classId = Number(req.params.id);
+
+    if(!Number.isInteger(classId)) return res.status(400).json({ error: 'No class found' });
+})
+
 export default router;
