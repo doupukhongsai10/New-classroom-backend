@@ -3,6 +3,7 @@ import express from 'express';
 import { db } from '../db/index.js';
 import { user } from '../db/schema/auth.js';
 import { classes, subjects } from '../db/schema/index.js';
+import { departments } from '../db/schema/app.js';
 
 const router = express.Router();
 
@@ -119,9 +120,61 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-    const classId = Number(req.params.id);
+    try {
+        const classId = Number(req.params.id);
 
-    if(!Number.isInteger(classId)) return res.status(400).json({ error: 'No class found' });
-})
+        if (!Number.isFinite(classId)) {
+            return res.status(400).json({ error: 'No class found' });
+        }
+
+        const [classDetails] = await db
+            .select({
+                id: classes.id,
+                name: classes.name,
+                description: classes.description,
+                subjectId: classes.subjectId,
+                teacherId: classes.teacherId,
+                capacity: classes.capacity,
+                status: classes.status,
+                bannerUrl: classes.bannerUrl,
+                bannerCldPubId: classes.bannerCldPubId,
+                inviteCode: classes.inviteCode,
+                createdAt: classes.createdAt,
+                updatedAt: classes.updatedAt,
+                subject: {
+                    id: subjects.id,
+                    name: subjects.name,
+                    code: subjects.code,
+                    description: subjects.description,
+                },
+                teacher: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    role: user.role,
+                },
+                department: {
+                    id: departments.id,
+                    name: departments.name,
+                    description: departments.description,
+                },
+            })
+            .from(classes)
+            .leftJoin(subjects, eq(classes.subjectId, subjects.id))
+            .leftJoin(user, eq(classes.teacherId, user.id))
+            .leftJoin(departments, eq(subjects.departmentId, departments.id))
+            .where(eq(classes.id, classId));
+
+        if (!classDetails) {
+            return res.status(404).json({ error: 'No class found' });
+        }
+
+        res.status(200).json({ data: classDetails });
+    } catch (error) {
+        console.error(`GET /classes/:id error:`, error);
+        res.status(500).json({ error: 'Failed to get class details' });
+    }
+});
 
 export default router;

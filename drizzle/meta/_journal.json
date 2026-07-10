@@ -15,6 +15,13 @@
       "when": 1783496947168,
       "tag": "0001_slippery_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783669636166,
+      "tag": "0002_omniscient_gertrude_yorkes",
+      "breakpoints": true
     }
   ]
 }
